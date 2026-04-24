@@ -15,6 +15,8 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
       - MONGO_INITDB_DATABASE=${MONGO_DATABASE}
+      - MONGO_NON_ROOT_USERNAME=${MONGO_NON_ROOT_USERNAME}
+      - MONGO_NON_ROOT_PASSWORD=${MONGO_NON_ROOT_PASSWORD}
     # Avoid accidentally creating zombie processes
     init: true
     # Specifying a restart policy to avoid downtime
@@ -26,6 +28,8 @@ services:
       - "./dev/mongod.conf:/etc/mongo/mongod.conf"
       # Mount the data to container. `chown -R 999:999` ./dev/data/mongo on host
       - "./dev/data/mongo:/data/db"
+      # Mount the init scripts to container
+      - "./dev/init:/docker-entrypoint-initdb.d"
     command: ["mongod", "--config", "/etc/mongo/mongod.conf"]
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
