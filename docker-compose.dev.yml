@@ -1,0 +1,46 @@
+services:
+  sennet-mongo-dev:
+    image: mongo:8.2
+    hostname: sennet-mongo-dev
+    container_name: sennet-mongo-dev
+    user: "999:999" # Non-root user
+    deploy:
+      # Modify this based on the actual VM resource
+      resources:
+        limits:
+          memory: 8G
+        reservations:
+          memory: 6G
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_DATABASE}
+    # Avoid accidentally creating zombie processes
+    init: true
+    # Specifying a restart policy to avoid downtime
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      # Mount the mongo configuration file to container
+      - "./dev/mongod.conf:/etc/mongo/mongod.conf"
+      # Mount the data to container. `chown -R 999:999` ./dev/data/mongo on host
+      - "./dev/data/mongo:/data/db"
+    command: ["mongod", "--config", "/etc/mongo/mongod.conf"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+    networks:
+      - sennet-mongo-dev-network
+
+networks:
+  sennet-mongo-dev-network:
+    driver: bridge
